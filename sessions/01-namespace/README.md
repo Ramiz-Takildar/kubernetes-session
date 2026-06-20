@@ -2,16 +2,19 @@
 
 ## What You Will Learn
 
-Namespaces provide logical isolation within a single cluster. They let you divide cluster resources between multiple users, teams, or environments (dev, staging, prod).
+Namespaces are the primary mechanism for resource isolation and multi-tenancy in Kubernetes. In this session you will create a custom namespace, understand how resources are scoped within it, and learn to switch your kubectl context so commands target the right environment automatically.
 
 ---
 
 ## Core Concepts
 
-- A Namespace is a virtual cluster backed by the same physical cluster
-- Resources in one Namespace are isolated from other Namespaces
-- Kubernetes creates a `default` Namespace out of the box
-- Use `kubectl config set-context --current --namespace=<name>` to switch contexts
+- A **Namespace** is a virtual cluster backed by the same physical cluster, enabling multiple teams or projects to share infrastructure without naming collisions.
+- Resources in one Namespace are **isolated by name** from other Namespaces, so two different teams can each deploy a service called "web" without conflict.
+- Kubernetes creates a **`default`** Namespace automatically, and most clusters also include `kube-system` and `kube-public` for system-level resources.
+- Use **`kubectl config set-context --current --namespace=<name>`** to switch your default namespace and avoid typing `-n` on every command.
+- **ResourceQuotas** and **LimitRanges** can be applied per namespace to control how much CPU, memory, and storage a team can consume.
+- Namespaces provide **logical isolation**, not physical security — network policies and RBAC are still required for true multi-tenant safety.
+- Deleting a Namespace **cascades** and removes every resource inside it, making it a powerful but dangerous cleanup tool.
 
 ---
 
@@ -85,6 +88,9 @@ kubectl config view --minify | grep namespace
 1. Namespaces provide **logical isolation** — not physical security
 2. The `dev` Namespace created here is required for Session 09 (Jenkins)
 3. Switching context with `kubectl config set-context --current --namespace=dev` eliminates the need for `-n dev` on every command
+4. Two teams can use identical resource names as long as they live in different Namespaces
+5. Deleting a Namespace deletes every resource inside it automatically
+6. Production clusters should pair Namespaces with ResourceQuotas and RBAC for real multi-tenancy
 
 ---
 

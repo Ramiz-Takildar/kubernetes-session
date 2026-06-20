@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-Containers are ephemeral — data is lost when they restart. PersistentVolumes (PV) and PersistentVolumeClaims (PVC) solve this by providing durable storage.
+Containers are ephemeral by design, so any data written inside them is lost on restart. In this session you will provision durable storage with PersistentVolumes and PersistentVolumeClaims, use an initContainer to seed data, and prove that files survive Pod deletion and recreation.
 
 ---
 
 ## Core Concepts
 
-- **PersistentVolume (PV)** = cluster admin provisions storage
-- **PersistentVolumeClaim (PVC)** = user/app requests storage
-- `hostPath` works only on single-node clusters (minikube, kind, Docker Desktop) — never use in production multi-node clusters
-- `initContainers` run before app containers and are perfect for setup tasks
-- A PVC survives Pod restarts — data persists as long as the PVC exists
+- A **PersistentVolume (PV)** represents a piece of storage provisioned by a cluster administrator and is independent of any individual Pod lifecycle.
+- A **PersistentVolumeClaim (PVC)** is a user or application request for storage that binds to an available PV with matching capacity and access modes.
+- **`hostPath`** works only on single-node clusters like minikube, kind, or Docker Desktop and must never be used in production multi-node clusters because pods may reschedule to nodes without the path.
+- **InitContainers** run to completion before application containers start, making them ideal for setup tasks like database migrations, permission fixes, or seeding files.
+- A PVC survives **Pod restarts and deletions** as long as the PVC object itself is not removed, which is what makes data truly persistent.
+- Kubernetes supports multiple access modes, with **ReadWriteOnce** being the most common for training, meaning the volume can be mounted by only one node at a time.
+- **Storage Classes** allow dynamic provisioning where a PVC automatically creates a matching PV without manual administrator intervention.
 
 ---
 
@@ -162,6 +164,8 @@ kubectl exec nginx-pvc-pod -- cat /usr/share/nginx/html/index.html
 2. `hostPath` is for training only — never use in production multi-node clusters
 3. InitContainers run before app containers and are perfect for setup tasks
 4. PVCs survive Pod restarts — data is persistent
+5. ReadWriteOnce means one node at a time, not one Pod at a time
+6. StorageClasses enable dynamic provisioning in real cloud environments
 
 ---
 

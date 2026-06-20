@@ -2,19 +2,19 @@
 
 ## What You Will Learn
 
-Health probes keep your applications healthy by automatically detecting failures. Init containers run before the main container starts, enabling setup tasks like configuration, data pre-loading, or waiting for dependencies.
+Health probes keep your applications healthy by automatically detecting failures and taking corrective action. Init containers run before the main container starts, enabling setup tasks like configuration, data pre-loading, or waiting for dependencies. Together, these mechanisms ensure that Pods start correctly and remain available throughout their lifecycle.
 
 ---
 
 ## Core Concepts
 
-- **Liveness Probe**: Checks if the container is alive; if it fails, Kubernetes restarts the container
-- **Readiness Probe**: Checks if the container is ready to serve traffic; if it fails, the pod is removed from Service endpoints
-- **Startup Probe**: Delays all other probes until the application has finished starting; useful for slow-boot applications
-- **Init Containers**: Run to completion before the main container starts; they must succeed before any main container begins
-- Init containers run sequentially in the order specified
-- If an init container fails, Kubernetes restarts the Pod (and re-runs init containers)
-- By default, regular containers and init containers do not share a filesystem. However, they can share data by mounting the same volume (e.g. `emptyDir`).
+- **Liveness probes** detect when a container has entered a broken state (like a deadlock or memory leak) and trigger an automatic restart, reducing the need for manual intervention during failures
+- **Readiness probes** determine whether a container is prepared to handle requests; when they fail, the Pod is temporarily removed from Service endpoints so traffic routes only to healthy instances
+- **Startup probes** protect slow-booting applications by delaying liveness and readiness checks until initialization is complete, preventing premature restarts on long-starting services
+- **Init containers** execute setup logic—such as waiting for a database, generating configs, or pre-loading data—before any main container begins, ensuring dependencies are satisfied first
+- Init containers run **sequentially** in the order defined, and each must complete successfully before the next one starts, creating a predictable initialization pipeline
+- If an init container fails, Kubernetes restarts the entire Pod and re-runs all init containers from the beginning, enforcing a clean and consistent startup state
+- By default, init containers and regular containers do not share a filesystem, but mounting a shared **emptyDir volume** allows data produced during initialization to be consumed by the main application
 
 ---
 
@@ -160,11 +160,11 @@ kubectl delete pod probe-demo init-demo
 
 ## Key Takeaways
 
-1. Liveness probes restart containers; Readiness probes remove pods from load balancing
-2. Startup probes delay other probes until the application has fully started
-3. Init containers run before main containers and must all succeed
-4. Init containers and regular containers share volumes via `emptyDir`
-5. Always set `initialDelaySeconds` appropriately to avoid premature probe failures
+1. Liveness probes restart unhealthy containers automatically, while readiness probes remove Pods from load balancing until they recover
+2. Startup probes prevent premature restarts on slow-booting applications by delaying all other probes until initialization is complete
+3. Init containers run sequentially before main containers and must all succeed before the application starts
+4. Init containers and regular containers can share data by mounting the same **emptyDir volume**
+5. Setting `initialDelaySeconds` correctly prevents probes from failing too early and causing unnecessary restarts
 
 ---
 

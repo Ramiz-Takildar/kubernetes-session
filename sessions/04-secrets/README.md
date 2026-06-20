@@ -2,7 +2,7 @@
 
 ## What You Will Learn
 
-Secrets store sensitive data like passwords, tokens, and SSH keys. Kubernetes encodes them as base64 at rest and can inject them into Pods as environment variables or mounted files.
+Secrets are the standard Kubernetes resource for managing sensitive data like passwords, API tokens, and TLS certificates. In this session you will create a Secret, understand the difference between base64 encoding and true encryption, and inject credentials securely into a running container.
 
 > **Instructor Note:** The value `cGFzc3dvcmQxMjM=` is base64 for `password123`. You can encode/decode:
 > ```bash
@@ -14,10 +14,13 @@ Secrets store sensitive data like passwords, tokens, and SSH keys. Kubernetes en
 
 ## Core Concepts
 
-- Secrets are base64-encoded, **not encrypted** by default
-- For production, enable encryption at rest via `EncryptionConfiguration`
-- `valueFrom.secretKeyRef` is the secure way to inject credentials into Pods
-- Compare with Session 03 (hardcoded password) — Secrets are the correct approach
+- **Secrets** store sensitive data like passwords, tokens, and SSH keys, and are base64-encoded by default for transport and storage.
+- Base64 encoding is **not encryption** — anyone with cluster access can decode the values, so additional protection is required for production workloads.
+- For production clusters, enable **encryption at rest** via an EncryptionConfiguration so etcd stores Secret data encrypted.
+- **`valueFrom.secretKeyRef`** is the secure way to inject credentials into containers as environment variables without exposing them in Pod specs or logs.
+- Secrets must reside in the **same Namespace** as the Pod that references them, and they can also be mounted as files inside a volume for applications that read credentials from disk.
+- Kubernetes has built-in Secret types such as **Opaque** for generic data, **tls** for certificates, and **docker-registry** for image pull credentials.
+- Hardcoding passwords in YAML is a common anti-pattern; Secrets exist precisely to separate credentials from application configuration and version control.
 
 ---
 
@@ -121,6 +124,8 @@ kubectl exec mysql-secret-pod -- mysql -uroot -ppassword123 -e "SELECT 1;"
 2. For production, enable encryption at rest: `EncryptionConfiguration`
 3. `valueFrom.secretKeyRef` is the secure way to inject credentials
 4. The contrast between Session 03 (hardcoded password) and Session 04 (Secret) is the main teaching point
+5. Secrets must live in the same Namespace as the consuming Pod
+6. Mounting Secrets as volumes is safer when applications read credentials from files instead of env vars
 
 ---
 

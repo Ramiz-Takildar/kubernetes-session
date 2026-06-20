@@ -2,16 +2,19 @@
 
 ## What You Will Learn
 
-ConfigMaps decouple configuration from container images. Use them for non-sensitive data like database names, feature flags, or file contents.
+ConfigMaps decouple configuration from container images so you can change settings without rebuilding or redeploying your application. In this session you will create a ConfigMap, inject its data into a Pod as environment variables, and verify that the application reads the configuration at runtime.
 
 ---
 
 ## Core Concepts
 
-- ConfigMaps store non-sensitive configuration as key/value pairs
-- They can be injected into Pods as environment variables or mounted files
-- `envFrom.configMapRef` injects all keys as environment variables at once
-- ConfigMaps are NOT encrypted — never use them for passwords or secrets
+- **ConfigMaps** store non-sensitive configuration as key/value pairs, making it easy to externalize settings like database names, feature flags, or file contents.
+- They can be injected into Pods as **environment variables** or mounted as **files** inside a volume, giving applications flexible access to configuration data.
+- Using **`envFrom.configMapRef`** injects every key in the ConfigMap as an environment variable in a single declaration, reducing verbose YAML.
+- ConfigMaps are **not encrypted at rest or in transit** — anyone with cluster read access can view their contents, so never store passwords or tokens in them.
+- A ConfigMap must exist in the **same Namespace** as the Pod that references it; cross-namespace references are not supported.
+- Updating a ConfigMap does **not automatically update** environment variables inside running Pods; a rollout or restart is required to pick up changes.
+- For values that exceed simple strings, ConfigMaps can store entire files under a key and mount them as read-only volumes inside the container.
 
 ---
 
@@ -121,6 +124,9 @@ kubectl exec mysql-configmap-pod -- mysql -uroot -prootpass123 -e "SHOW DATABASE
 1. ConfigMaps are for **non-sensitive** data only
 2. `envFrom` is the quickest way to inject all key-value pairs
 3. Never hardcode passwords in YAML — Session 04 shows the correct approach using Secrets
+4. ConfigMaps must reside in the same Namespace as the Pod that consumes them
+5. Changing a ConfigMap requires a Pod restart for env vars to update
+6. Volume mounts are the preferred approach when applications expect configuration files
 
 ---
 

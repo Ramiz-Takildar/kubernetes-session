@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-Node affinity and anti-affinity allow you to control exactly which node a Pod runs on. You can prefer or require certain node characteristics using labels.
+Node affinity and anti-affinity give you fine-grained control over Pod placement by matching Pods to nodes with specific labels. You can require certain node characteristics for compliance or performance, or simply prefer them to optimize resource utilization. This session shows how to use labels and affinity rules to place workloads exactly where they should run.
 
 ---
 
 ## Core Concepts
 
-- **NodeAffinity** controls which nodes a Pod can be scheduled on
-- `requiredDuringSchedulingIgnoredDuringExecution` = hard requirement (must satisfy)
-- `preferredDuringSchedulingIgnoredDuringExecution` = soft preference (best effort)
-- Pods without affinity rules can land on any node
-- Anti-affinity can spread replicas across nodes/zones for high availability
+- **Node affinity** tells the Kubernetes scheduler which nodes are acceptable for a Pod by evaluating node labels, enabling workload placement based on hardware, zone, or custom organizational tags
+- `requiredDuringSchedulingIgnoredDuringExecution` creates a **hard requirement** that must be satisfied; if no matching node exists, the Pod remains in Pending state until one becomes available
+- `preferredDuringSchedulingIgnoredDuringExecution` expresses a **soft preference** that the scheduler tries to honor but will ignore if no suitable node exists, providing flexibility without blocking deployment
+- Pods without any affinity rules can be scheduled on **any available node**, which is efficient for stateless workloads but risky for services that need hardware proximity or regulatory isolation
+- **Anti-affinity** spreads Pods across nodes or availability zones, preventing multiple replicas from landing on the same node and improving fault tolerance during node failures
+- Affinity is often combined with **taints and tolerations** to reserve specialized nodes (like GPU or SSD-equipped nodes) for specific Pods, creating dedicated node pools within a cluster
+- Labeling nodes is the prerequisite for all affinity-based scheduling; without consistent and accurate node labels, affinity rules have no data to evaluate and are effectively ignored
 
 ---
 
@@ -139,11 +141,12 @@ kubectl get pods affinity-demo -w
 
 ## Key Takeaways
 
-1. Node affinity rules control which nodes a Pod can be scheduled on
-2. `requiredDuringSchedulingIgnoredDuringExecution` is a hard requirement
-3. Without affinity rules, the scheduler places Pods on any available node
-4. Labeling nodes is the prerequisite for affinity-based scheduling
-5. Removing required labels causes new Pods to go Pending
+1. Node affinity rules control which nodes a Pod can be scheduled on by matching Pod requirements against node labels
+2. `requiredDuringSchedulingIgnoredDuringExecution` is a hard requirement that blocks scheduling if no matching node exists
+3. `preferredDuringSchedulingIgnoredDuringExecution` is a soft preference that the scheduler honors when possible
+4. Without affinity rules, Pods can land on any available node, which may violate performance or compliance needs
+5. Labeling nodes is the prerequisite for all affinity-based scheduling, and removing required labels causes new Pods to go Pending
+6. Combining affinity rules with taints and tolerations creates dedicated node pools for specialized workloads like GPU or high-memory applications
 
 ---
 

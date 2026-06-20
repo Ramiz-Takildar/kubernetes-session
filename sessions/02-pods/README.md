@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-A Pod is the smallest deployable unit in Kubernetes. It wraps one or more containers that share networking and storage. In practice, you rarely create Pods directly — you use Deployments, Jobs, etc. But understanding Pods is essential.
+A Pod is the smallest deployable unit in Kubernetes and represents one or more containers that share networking and storage. In this session you will create Pods directly, inspect their runtime details, and understand why higher-level controllers like Deployments usually manage them in production.
 
 ---
 
 ## Core Concepts
 
-- A Pod represents a single running process on the cluster
-- Containers inside a Pod share the same network namespace (same IP)
-- Pods are mortal — if the node fails, the Pod is lost
-- No `namespace` field in metadata means the Pod goes to the `default` namespace
-- Labels are key/value pairs used by selectors (Deployments, Services)
+- A **Pod** represents a single running process on the cluster and is the atomic unit of scheduling, meaning it is always placed on a single node.
+- Containers inside a Pod share the same **network namespace**, giving them a single IP address and allowing localhost communication between containers.
+- Pods are **mortal by design** — if the node fails or the Pod is evicted, it is not resurrected automatically, which is why controllers like Deployments exist.
+- Omitting the **`namespace`** field in metadata means the Pod is placed in the `default` namespace, which can lead to clutter and accidental collisions.
+- **Labels** are key/value pairs attached to Pods that enable selectors used by Deployments, Services, and NetworkPolicies to discover and group resources.
+- The **pause container** runs in every Pod to hold the network namespace and lifecycle, even though you never define it yourself.
+- **`kubectl port-forward`** and **`kubectl exec`** are essential debugging tools that let you reach into Pods without exposing them through Services.
 
 ---
 
@@ -129,7 +131,9 @@ kubectl exec basic-nginx-pod -- ps aux
 1. No `namespace` field = `default` namespace
 2. Labels are critical for selectors used by Deployments and Services (later sessions)
 3. `kubectl exec` lets you debug inside running containers
-4. Pods are rarely created directly in production — Deployments manage them for you
+4. `kubectl port-forward` provides temporary access to a Pod for local testing
+5. Pods are rarely created directly in production — Deployments manage them for you
+6. Multiple containers in one Pod are an advanced pattern for sidecars, not the default
 
 ---
 

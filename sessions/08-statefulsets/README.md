@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-StatefulSets are for applications that require stable identity, stable storage, and ordered deployment (databases, message queues, etc.). Unlike Deployments, StatefulSets assign predictable names and network identities.
+StatefulSets are designed for applications that require stable identity, stable storage, and ordered deployment, such as databases and message queues. In this session, you will create a StatefulSet, observe its predictable naming and sequential scaling behavior, and understand when to choose a StatefulSet over a Deployment.
 
 ---
 
 ## Core Concepts
 
-- StatefulSet pods get **predictable names**: `<statefulset-name>-<index>` (e.g., `mysql-sts-0`)
-- **Headless Service** (`clusterIP: None`) enables direct Pod-to-Pod DNS resolution
-- StatefulSets deploy pods sequentially (0, 1, 2...) and delete them in reverse order
-- StatefulSets are for **stateful** apps; Deployments are for **stateless** apps
-- This session uses no PVC to keep it universally working across all cluster types
+- StatefulSets are the right abstraction for **stateful applications** like databases, caches, and message brokers because they guarantee stable network identity and ordered lifecycle management that Deployments cannot provide.
+- Each StatefulSet pod receives a **predictable name** following the pattern `<statefulset-name>-<ordinal-index>` (e.g., `mysql-sts-0`), enabling application code and operators to know exactly which instance they are addressing without querying the API server.
+- A **headless Service** (`clusterIP: None`) is required for StatefulSets because it causes DNS to return the individual Pod IPs directly rather than a single virtual IP, enabling direct peer-to-peer communication between replicas.
+- StatefulSets deploy Pods **sequentially** (0, 1, 2, ...) and delete them in **reverse order**, ensuring that distributed stateful systems can bootstrap clusters correctly and shut down gracefully without data corruption.
+- The `serviceName` field in the StatefulSet spec must match the name of the headless Service, and this pairing is what enables stable DNS entries such as `<pod-name>.<service-name>.<namespace>.svc.cluster.local`.
+- Unlike Deployments, which treat all replicas as identical and interchangeable, StatefulSets assign each pod a **unique ordinal identity** and can optionally pair it with a dedicated PersistentVolumeClaim, ensuring data stays with its pod even after rescheduling.
+- StatefulSets are not necessary for stateless web applications or APIs: if your workload does not care about pod identity, ordering, or persistent per-pod state, a Deployment is simpler and more flexible.
 
 ---
 
@@ -131,10 +133,12 @@ kubectl exec mysql-sts-0 -- mysql -uroot -ppassword123 -e "SHOW STATUS LIKE 'Upt
 
 ## Key Takeaways
 
-1. StatefulSet pods get **predictable names**: `<statefulset-name>-<index>`
-2. Headless Service (`clusterIP: None`) enables direct Pod-to-Pod DNS resolution
-3. StatefulSets deploy pods **sequentially** and delete them in **reverse order**
-4. Compare to Deployment: StatefulSets for stateful apps (databases), Deployments for stateless apps
+1. StatefulSet pods get predictable names like `<statefulset-name>-<index>`, unlike Deployment pods
+2. A headless Service (`clusterIP: None`) is required for direct Pod-to-Pod DNS resolution
+3. StatefulSets deploy pods sequentially and delete them in reverse order
+4. The `serviceName` field must match the headless Service name for stable DNS
+5. StatefulSets are for stateful apps (databases); Deployments are for stateless apps
+6. Persistent per-pod storage can be attached via `volumeClaimTemplates` for data durability
 
 ---
 

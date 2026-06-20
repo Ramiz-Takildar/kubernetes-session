@@ -2,16 +2,19 @@
 
 ## What You Will Learn
 
-This session ties together Namespace, Pod, and Service into a real-world example. Jenkins is a CI/CD server that requires multiple ports and a Service to expose its UI and agent port.
+This session demonstrates how to combine Namespace, Pod, and Service resources into a real-world CI/CD deployment. You will run Jenkins inside a dedicated namespace, expose multiple ports through a single Service, and access the Jenkins UI via port-forwarding.
 
 ---
 
 ## Core Concepts
 
-- Multi-port Services expose each port with a name for easy reference
-- Namespace-scoped resources require `-n` flag or a context switch
-- Real-world applications often combine multiple Kubernetes primitives
-- The `dev` namespace must exist before applying this manifest (created in Session 01)
+- **Multi-port Services** expose each container port with a distinct name, making it possible for other pods, operators, and external systems to reference specific ports clearly without hardcoding port numbers.
+- The **`dev` namespace** isolates the Jenkins workload from other environments, enforcing RBAC boundaries, resource quotas, and network policies that prevent accidental cross-environment interference.
+- **Named ports** inside a Service manifest act as stable contracts: Jenkins agents can connect to the `agent` port by name, and the web UI is reachable via the `web` port, even if the underlying port numbers change later.
+- **Fixed NodePorts** (`nodePort: 30080` and `nodePort: 30500`) provide deterministic external access points, which is useful in training environments and on-premises clusters where cloud LoadBalancers are unavailable.
+- **Port-forwarding** (`kubectl port-forward`) creates a secure local tunnel into the cluster, letting you access the Jenkins web UI on `localhost:8080` without exposing the Service externally or configuring ingress rules.
+- Real-world workloads almost always combine **multiple Kubernetes primitives**: a Namespace for isolation, a Pod for the application container, a Service for network access, and often a ConfigMap or Secret for configuration and credentials.
+- Container images for CI/CD servers like Jenkins are often large (~500MB), so the first Pod creation may take minutes depending on network speed and image layer caching on the node.
 
 ---
 
@@ -126,10 +129,12 @@ kubectl logs jenkins -n dev
 
 ## Key Takeaways
 
-1. Multi-port Services expose each port with a **name** for identification
-2. Namespace-scoped resources require the `-n` flag or a context switch
-3. Real-world applications often combine **multiple Kubernetes primitives** (Pod + Service + Namespace)
-4. Jenkins image is large — patience is required on first pull
+1. Multi-port Services expose each port with a **name** for easy reference by other components
+2. Namespace-scoped resources require the `-n` flag or a context switch to access
+3. Named ports create stable contracts that decouple service consumers from port numbers
+4. Port-forwarding is the safest way to access cluster services locally without exposing them
+5. Real-world applications combine multiple primitives: Pod, Service, Namespace, and beyond
+6. Large images like Jenkins may take several minutes to pull on first deployment
 
 ---
 

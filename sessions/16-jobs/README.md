@@ -2,19 +2,19 @@
 
 ## What You Will Learn
 
-Jobs run one-time tasks to completion. CronJobs schedule Jobs to run repeatedly at defined times. Unlike Deployments, Jobs are meant to terminate after their work is done.
+Jobs run finite tasks to completion, making them ideal for batch processing, data migration, and one-off administrative operations. CronJobs extend this capability by scheduling Jobs to run repeatedly at specified intervals. Unlike Deployments, which keep Pods running indefinitely, Jobs and CronJobs are designed to start, complete, and terminate cleanly.
 
 ---
 
 ## Core Concepts
 
-- **Job**: Runs a Pod until N completions succeed (not continuously running)
-- `completions`: How many Pods must complete successfully for the Job to finish
-- `parallelism`: How many Pods run concurrently
-- `backoffLimit`: How many times to retry a failed Pod before marking the Job as failed
-- **CronJob**: Schedules Jobs based on cron syntax (`分 时 日 月 周`)
-- CronJobs use `jobTemplate.spec.template.spec` for the Job's pod spec
-- Jobs do not restart automatically — they fail and optionally retry
+- A **Job** runs one or more Pods until a specified number of completions succeed, then stops—making it the right abstraction for batch workloads rather than long-running services
+- `completions` defines how many successful Pod executions the Job needs before it is considered finished, enabling parallelized batch processing when combined with `parallelism`
+- `parallelism` controls how many Pods run concurrently, allowing a Job to distribute work across multiple nodes and complete faster without creating individual Pod specs manually
+- `backoffLimit` limits how many times Kubernetes retries a failed Pod before marking the entire Job as failed, preventing infinite retry loops on fundamentally broken workloads
+- `restartPolicy: OnFailure` is **required** for Jobs because `Always` is incompatible with a controller that expects Pods to terminate; `Never` is also valid for one-shot tasks that should not retry
+- A **CronJob** wraps a Job template and schedules it using standard cron syntax, automating recurring tasks like backups, report generation, or certificate renewal without external schedulers
+- CronJobs do **not guarantee execution**; if the cluster is unavailable at the scheduled time, the run is skipped, so they are best suited for idempotent tasks that tolerate occasional misses
 
 ---
 
@@ -134,11 +134,12 @@ kubectl get jobs
 
 ## Key Takeaways
 
-1. Jobs run to completion (N times via `completions`), then stop
-2. `restartPolicy: Always` is invalid for Jobs — use `OnFailure` or `Never`
-3. CronJobs use a nested `jobTemplate` to define the Job spec
-4. CronJob `schedule` follows standard cron syntax: `分 时 日 月 周`
-5. CronJobs do not guarantee execution — they are "at least once"
+1. Jobs run to completion (N times via `completions`), then stop, making them ideal for batch and administrative tasks
+2. `restartPolicy: Always` is invalid for Jobs; you must use `OnFailure` or `Never`
+3. CronJobs use a nested `jobTemplate` to define the Job spec and schedule it with standard cron syntax
+4. `parallelism` allows Jobs to process work concurrently across multiple Pods without manual coordination
+5. The `backoffLimit` prevents infinite retries on broken workloads by capping how many times a failed Pod is restarted
+6. CronJobs are best suited for idempotent tasks because missed schedules are not automatically replayed when the cluster recovers
 
 ---
 

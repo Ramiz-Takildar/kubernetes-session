@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-Services provide a stable network endpoint for a set of Pods. They handle load balancing across pod replicas and keep traffic flowing even as Pods are created or destroyed.
+Services provide a stable network endpoint for a set of Pods, handling load balancing across replicas and keeping traffic flowing even as Pods are created or destroyed. In this session, you will create a Service, understand how selectors bind it to Pods, and explore the differences between ClusterIP, NodePort, and LoadBalancer types.
 
 ---
 
 ## Core Concepts
 
-- Services decouple the network address from individual Pods
-- The `selector` is the glue that connects a Service to its Pods
-- `NodePort` exposes the Service on a static port on every node's IP
-- Pods must have labels matching the Service selector for endpoints to be created
-- `ClusterIP` is internal only; `NodePort` and `LoadBalancer` are for external access
+- Services solve the **Pod IP volatility problem**: Pods are ephemeral and their IPs change on every restart, so a Service creates a stable virtual IP and DNS name that clients can rely on regardless of which backend Pods are running.
+- The **`selector`** is the critical link between a Service and its Pods: the Service controller continuously watches for Pods whose labels match the selector and adds their IPs to the Endpoints object automatically.
+- **ClusterIP** is the default Service type and provides an internal-only IP address that is reachable only from within the cluster, making it ideal for microservice-to-microservice communication.
+- **NodePort** exposes the Service on a static port across every node in the cluster, allowing external traffic to reach the Service directly via `<NodeIP>:<NodePort>` without requiring a cloud load balancer.
+- **LoadBalancer** integrates with cloud-provider APIs to provision an external load balancer with a public IP, abstracting NodePort management and providing a single entry point for production traffic.
+- The **Endpoints** object tracks which Pod IPs are currently backing a Service, and it is updated dynamically as Pods scale, restart, or fail, ensuring traffic is never routed to dead backends.
+- **Label matching** must be exact: if a Pod's labels do not match the Service selector, the Pod will not receive traffic, which is a common source of "connection refused" errors in practice.
 
 ---
 
@@ -138,10 +140,12 @@ kubectl get endpoints nginx-service -w
 
 ## Key Takeaways
 
-1. Services decouple frontend access from backend Pod lifecycle
-2. The `selector` is the critical link between Services and Pods
-3. `NodePort` is the easiest way to test external access on local clusters
-4. Endpoints object shows which Pods are currently receiving traffic
+1. Services decouple frontend access from backend Pod lifecycle by providing a stable virtual IP
+2. The `selector` is the critical link between Services and Pods; labels must match exactly
+3. `ClusterIP` is for internal cluster communication only
+4. `NodePort` is the easiest way to test external access on local clusters
+5. The Endpoints object shows which Pods are currently receiving traffic and updates automatically
+6. Pod labels that do not match the Service selector will cause the Service to have zero endpoints
 
 ---
 

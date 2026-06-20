@@ -2,18 +2,19 @@
 
 ## What You Will Learn
 
-DaemonSets ensure that all (or specific) nodes run a copy of a specific Pod. As nodes are added to the cluster, Pods are automatically added. When nodes are removed, those Pods are garbage collected. Unlike Deployments which ensure N replicas regardless of node count, DaemonSets guarantee one pod per node.
+DaemonSets ensure that a specific Pod runs on every node (or a subset of nodes) in your cluster, automatically scaling as nodes join or leave. They are the standard pattern for cluster-wide infrastructure services like log collection and monitoring. This session demonstrates how DaemonSets differ from Deployments and when to choose one over the other.
 
 ---
 
 ## Core Concepts
 
-- A DaemonSet creates **one Pod per node** automatically (not N replicas — one per node)
-- Ideal for system-level workloads: log collectors, monitoring agents, log forwarding
-- If a node is added to the cluster, the DaemonSet automatically deploys a pod there
-- If a node is removed, the pod is garbage collected
-- Unlike Deployments, there is no `replicas` field — scheduling is automatic
-- Use `nodeSelector`, `tolerations`, or `nodeAffinity` to run on specific nodes
+- A **DaemonSet** deploys exactly one Pod per matching node, automatically creating Pods when nodes join the cluster and garbage-collecting them when nodes are removed or drained
+- Unlike Deployments, DaemonSets have **no `replicas` field** because their scale is derived directly from the node count, making them self-adjusting as the cluster grows or shrinks
+- DaemonSets are the canonical pattern for **node-level infrastructure services** such as log shippers (Fluentd, Filebeat), monitoring agents (Prometheus Node Exporter), and security scanners that need host-level visibility
+- CNI plugins like **Calico and Cilium** run as DaemonSets because every node must have the networking stack installed before regular Pods can connect to the network
+- You can restrict a DaemonSet to specific nodes using `nodeSelector`, **nodeAffinity**, or **tolerations**, which is useful when only GPU nodes need drivers or tainted control-plane nodes need specialized agents
+- When a node becomes unavailable, the DaemonSet does not reschedule its Pod elsewhere because the workload is inherently node-bound; this is a key semantic difference from ReplicaSets
+- DaemonSet Pods can access the host filesystem and network namespace through `hostPath` volumes and `hostNetwork`, enabling deep system integration that regular application Pods typically avoid
 
 ---
 
@@ -115,11 +116,12 @@ kubectl describe daemonset nginx-ds
 
 ## Key Takeaways
 
-1. DaemonSets guarantee **one pod per node**, not N replicas
-2. No `replicas` field needed — scheduling is automatic based on node count
-3. Perfect for cluster-wide services: log collectors, monitoring, networking
-4. Use `nodeSelector` or `tolerations` to target specific nodes
-5. DaemonSets automatically handle node addition and removal
+1. DaemonSets guarantee exactly one Pod per matching node, not a fixed number of replicas
+2. No `replicas` field is needed because scheduling is automatic and scales with the node count
+3. DaemonSets are the standard pattern for cluster-wide infrastructure services like log collectors, monitoring agents, and CNI plugins
+4. You can use `nodeSelector`, `nodeAffinity`, or `tolerations` to restrict DaemonSets to specific node types
+5. DaemonSets automatically handle node addition and removal, creating and garbage-collecting Pods accordingly
+6. DaemonSets are inherently node-bound: if a node fails, its DaemonSet Pod is not rescheduled to another node, unlike ReplicaSet-managed Pods
 
 ---
 

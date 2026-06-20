@@ -6,20 +6,19 @@ Role-Based Access Control (RBAC) restricts who can perform what actions on which
 
 ## What You Will Learn
 
-- How ServiceAccounts provide identity for applications
-- How Roles define permissions within a namespace
-- How RoleBindings link ServiceAccounts to Roles
-- How to verify RBAC permissions using a test pod
+Role-Based Access Control (RBAC) enforces the principle of least privilege by restricting who can perform which actions on specific resources. In this session, you will create a ServiceAccount, define a Role with granular permissions, bind them together with a RoleBinding, and verify the resulting access using `kubectl auth can-i`.
 
 ---
 
 ## Core Concepts
 
-- **ServiceAccount**: Identity for workloads running in Kubernetes
-- **Role**: Defines permissions (rules) for resources within a namespace
-- **RoleBinding**: Grants a Role to a ServiceAccount (or User/Group)
-- **Role vs ClusterRole**: Role is namespace-scoped; ClusterRole is cluster-wide
-- **Verbs**: Actions like `get`, `list`, `watch`, `create`, `delete`
+- **ServiceAccounts** provide identity for workloads running inside the cluster, allowing Pods to authenticate to the Kubernetes API server and receive scoped permissions rather than inheriting overly broad defaults.
+- **Roles** define a set of permissions as a list of rules, each specifying an API group, resource type, and allowed verbs (such as `get`, `list`, `create`, `delete`), restricting access to only the operations a workload actually needs.
+- **RoleBindings** grant a Role to a subject — typically a ServiceAccount, User, or Group — within a specific namespace, creating the actual authorization link between identity and permission.
+- **ClusterRoles and ClusterRoleBindings** extend the same pattern cluster-wide, but Roles and RoleBindings are namespace-scoped by default, which is the safest starting point for most applications.
+- The **`apiGroups` field** uses an empty string `""` to refer to the core Kubernetes API (pods, services, configmaps), while named groups like `apps` or `rbac.authorization.k8s.io` target specific extension APIs.
+- **`kubectl auth can-i`** is the fastest way to verify RBAC configuration: it simulates a request as a specific subject and returns `yes` or `no`, making it invaluable for debugging permission denials before they affect running workloads.
+- RBAC is additive only: there is no "deny" rule in standard Kubernetes RBAC, so the effective permissions of a subject are the union of all Roles and ClusterRoles bound to it, which is why restrictive default policies are essential.
 
 ---
 

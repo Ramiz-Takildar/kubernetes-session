@@ -2,18 +2,19 @@
 
 ## What You Will Learn
 
-Network Policies control traffic flow to and from Pods. They are the Kubernetes way to implement firewall rules at the pod level, allowing you to specify which pods can communicate with each other.
+Network Policies are the Kubernetes-native way to enforce firewall rules between Pods, controlling which services can communicate at the pod level. Unlike external firewalls, they operate inside the cluster and follow the same declarative model as other Kubernetes resources. This session teaches you how to isolate workloads, enforce zero-trust networking, and verify that policies are actually blocking or allowing traffic.
 
 ---
 
 ## Core Concepts
 
-- Network Policies are namespaced resources
-- They use pod selectors to target specific pods
-- Policies are additive: if any policy allows traffic, it is allowed
-- By default, all ingress/egress traffic is allowed if no policy exists
-- A NetworkPolicy without ingress rules blocks all incoming traffic to selected pods
-- **Not all CNI plugins support NetworkPolicy** (e.g., minikube with default driver). Check that your cluster CNI enforces network policies.
+- **Network Policies** are namespaced resources that define ingress and egress rules for Pods, acting as a micro-firewall that operates at the pod level rather than the host level
+- They use **pod selectors** (`podSelector`) and namespace selectors to target specific groups of Pods, enabling fine-grained segmentation without hard-coding IP addresses
+- Policy behavior is **additive**: if any policy in a namespace allows traffic, it is permitted, which means you must explicitly define all allowed sources to achieve true isolation
+- By default, Kubernetes clusters allow **all ingress and egress traffic** unless a NetworkPolicy is created; this permissive default makes clusters easy to use but insecure without explicit rules
+- A NetworkPolicy that selects Pods but contains no ingress rules effectively **blocks all incoming traffic** to those Pods, providing a deny-by-default posture for sensitive services
+- **Not all CNI plugins enforce NetworkPolicy** rules; the policy object may exist in the API without any effect if the underlying network plugin (like the default minikube bridge CNI) does not implement them
+- Network Policies secure east-west traffic between Pods in addition to north-south traffic, making them essential for zero-trust architectures where every internal connection is explicitly authorized
 
 ---
 
@@ -188,13 +189,13 @@ kubectl delete pod test-pod -n netpol-demo
 
 ## Key Takeaways
 
-1. Network Policies control traffic flow to/from Pods at the Kubernetes level
-2. Policies use pod selectors (`podSelector`) to target specific pods
-3. By default, no traffic is blocked — you must create a policy to restrict access
-4. A policy with `Ingress` and no `from` rules blocks ALL ingress traffic
-5. Only pods matching the `from.podSelector` can send traffic to protected pods
-6. **Not all CNI plugins enforce NetworkPolicy** — verify your CNI supports it
-7. Network Policies are additive — if any policy allows traffic, it is permitted
+1. Network Policies control traffic flow to and from Pods at the Kubernetes API level, but only work if the underlying CNI plugin enforces them
+2. Policies use `podSelector` and namespace selectors to target specific groups of Pods without hard-coding IP addresses
+3. By default, all ingress and egress traffic is allowed unless a NetworkPolicy restricts it
+4. A policy that selects Pods but defines no ingress rules effectively blocks all incoming traffic to those Pods
+5. Only Pods matching the `from.podSelector` can send traffic to protected Pods, creating explicit allow-lists
+6. Network Policy behavior is additive: if any policy allows traffic, it is permitted, so complete isolation requires comprehensive rule coverage
+7. Network Policies secure both east-west traffic between Pods and north-south traffic, forming the foundation of zero-trust cluster networking
 
 ---
 

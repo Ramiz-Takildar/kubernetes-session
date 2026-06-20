@@ -2,7 +2,7 @@
 
 ## What You Will Learn
 
-Gateway API is the next-generation Kubernetes ingress and service networking model. It replaces Ingress with more expressive, role-oriented resources: `Gateway`, `GatewayClass`, and `HTTPRoute`. In this session you will create all three to route HTTP traffic to a backend pod through a declarative Gateway.
+Gateway API is the next-generation Kubernetes ingress and service networking model, replacing Ingress with more expressive, role-oriented resources. In this session, you will install the Gateway API CRDs, create a Gateway, GatewayClass, and HTTPRoute, and observe how they declaratively route HTTP traffic to a backend Service.
 
 ---
 
@@ -24,11 +24,13 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 
 ## Core Concepts
 
-- `GatewayClass` — a cluster-wide template for a load balancer; like a driver for the Gateway
-- `Gateway` — a running instance of a GatewayClass, listening for traffic on specific ports
-- `HTTPRoute` — declares which traffic reaches which backend services; attached to a Gateway via `parentRefs`
-- Gateway API uses roles: the **infrastructure provider** manages GatewayClass, the **developer** manages HTTPRoute
-- `Accepted=False` means no controller is actively processing the Gateway — expected without a controller installed
+- **GatewayClass** is a cluster-wide template that defines a class of load balancers, similar to a StorageClass for storage provisioners; it lets infrastructure providers offer different gateway implementations without changing application manifests.
+- **Gateway** is a namespaced resource that represents a running traffic entry point, binding to a GatewayClass and declaring which ports, protocols, and TLS settings it accepts traffic on.
+- **HTTPRoute** attaches to a Gateway via `parentRefs` and declares routing rules such as host matching, path prefix matching, and header-based filtering, decoupling traffic routing logic from the infrastructure that terminates it.
+- Gateway API introduces **role-oriented resource design**: infrastructure teams manage GatewayClasses and Gateways, while application developers manage HTTPRoutes, eliminating the permission and coordination conflicts common with the monolithic Ingress resource.
+- Unlike Ingress, which conflates listener configuration and routing rules into a single object, Gateway API separates concerns into distinct resources, making it possible to share a Gateway across multiple teams while keeping each team's routes independent and secure.
+- The **`Accepted=False` status** on a Gateway is expected when no Gateway controller is installed, because the CRDs only register the resource schema; an actual controller must reconcile the Gateway and implement the data plane.
+- Gateway API supports **multiple protocol types** beyond HTTP, including HTTPS with TLS termination, TCP, UDP, and gRPC, making it a unified evolution path for all ingress and service mesh traffic management.
 
 ---
 
@@ -198,11 +200,12 @@ kubectl get all -n gateway-demo
 
 ## Key Takeaways
 
-1. Gateway API is the successor to Ingress — more expressive and role-oriented
-2. `Gateway` declares where traffic enters, `HTTPRoute` declares how it gets routed
-3. `GatewayClass` is a cluster-scoped template that a controller implements
+1. Gateway API is the successor to Ingress, offering a more expressive and role-oriented model
+2. `GatewayClass` is a cluster-scoped template that a controller implements
+3. `Gateway` declares where traffic enters; `HTTPRoute` declares how it gets routed
 4. `parentRefs` binds an HTTPRoute to a specific Gateway listener
-5. `Accepted=False` is expected when no Gateway controller is running — the API model is still fully demonstrable
+5. `Accepted=False` is expected without a Gateway controller — the API model is still demonstrable
+6. Gateway API separates infrastructure concerns from developer routing rules
 
 ---
 

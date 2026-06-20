@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-Deployments provide declarative updates for Pods. They handle scaling, rolling updates, and self-healing (restarting failed Pods automatically).
+Deployments provide declarative updates for Pods and are the standard way to run stateless applications in Kubernetes. They handle scaling, rolling updates, and self-healing automatically, so you can focus on desired state rather than manual intervention.
 
 ---
 
 ## Core Concepts
 
-- Deployments manage **ReplicaSets** which manage **Pods**
-- Scaling is instant and declarative: change `replicas` and apply
-- If a Pod dies, the Deployment automatically creates a replacement
-- `selector.matchLabels` must match the pod template labels
-- `RollingUpdate` strategy replaces pods gradually to avoid downtime
+- Deployments manage **ReplicaSets** which manage **Pods**, creating a layered controller pattern that enables clean updates and rollback.
+- Scaling is instant and declarative: change the **`replicas`** count and apply the manifest, and Kubernetes adjusts the running Pod count to match.
+- If a Pod dies, the Deployment automatically creates a replacement to maintain the declared replica count without human intervention.
+- **`selector.matchLabels`** must match the Pod template labels exactly, or the Deployment will orphan Pods or fail to manage newly created ones.
+- **`RollingUpdate`** strategy replaces Pods gradually using `maxUnavailable` and `maxSurge` parameters to avoid downtime during version changes.
+- **Resource requests and limits** on containers guarantee minimum compute and cap maximum usage, preventing a single Pod from starving other workloads on the node.
+- Deployment history is tracked automatically, enabling **rollbacks** to previous revisions via `kubectl rollout undo`.
 
 ---
 
@@ -141,6 +143,7 @@ kubectl rollout history deployment/nginx-deployment
 3. If a Pod dies, the Deployment creates a replacement automatically
 4. Resource limits prevent a single pod from consuming all node resources
 5. `RollingUpdate` keeps the application available during updates
+6. `kubectl rollout undo` reverts to a previous Deployment revision quickly
 
 ---
 

@@ -2,17 +2,19 @@
 
 ## What You Will Learn
 
-Taints and tolerations are Kubernetes scheduling mechanisms that work together: a **taint** is applied to a node to repel pods, and a **toleration** is applied to a pod to allow it to be scheduled onto a tainted node.
+Taints and tolerations are Kubernetes scheduling mechanisms that control which Pods can run on which nodes. In this session, you will apply a taint to a node, observe how it repels unqualified Pods, and use a toleration to allow specific Pods to schedule anyway.
 
 ---
 
 ## Core Concepts
 
-- Taints are applied to **nodes** to prevent unspecific pods from scheduling onto them
-- Tolerances are applied to **pods** to " tolerate " a taint and still be scheduled
-- The `NoSchedule` effect means the scheduler will not place a pod on the node unless it has a matching toleration
-- Taints are useful for dedicated node pools (e.g., GPU nodes, training nodes)
-- Removing a taint allows pending pods to be scheduled normally
+- **Taints** are applied to nodes to repel Pods that do not have a matching toleration, effectively partitioning the cluster into general-purpose and specialized node pools without physically separating them.
+- **Tolerations** are declared in a Pod spec and tell the scheduler that the Pod is allowed to run on a node with a matching taint, enabling workloads to opt into specialized hardware or restricted environments.
+- The **`NoSchedule` effect** prevents the scheduler from placing a Pod on a tainted node unless the Pod explicitly tolerates that taint, which is the standard way to dedicate nodes to specific workloads like GPU training or database hosting.
+- A toleration must match the taint's **key, operator, value, and effect** exactly: if any of these fields do not align, the scheduler treats the Pod as incompatible and will not place it on the node.
+- Taints are useful for **dedicated node pools** such as GPU nodes, memory-optimized instances, or training environments, ensuring that expensive or constrained resources are reserved for the workloads that actually need them.
+- Removing a taint from a node returns it to the general scheduling pool, and any pending Pods that were previously blocked will be scheduled automatically without needing to modify the Pod manifests.
+- Taints and tolerations work alongside labels and node selectors: while **node affinity** attracts Pods to nodes they prefer, taints actively repel Pods that do not belong, providing a stronger guarantee of node specialization.
 
 ---
 
@@ -138,11 +140,12 @@ kubectl get pods -l app=taint-demo
 
 ## Key Takeaways
 
-1. Taints repel pods; tolerations allow pods to be scheduled on tainted nodes
+1. Taints repel Pods; tolerations allow Pods to be scheduled on tainted nodes
 2. A toleration must match the taint's key, operator, value, and effect exactly
 3. `NoSchedule` prevents scheduling unless a matching toleration exists
-4. Remove the taint to return the node to the general pool
-5. Taints and tolerations are the standard way to dedicate nodes to specific workloads
+4. Taints are the standard way to dedicate nodes to specific workloads (e.g., GPU, training)
+5. Removing a taint returns the node to the general pool and unblocks pending Pods
+6. Taints complement node affinity by repelling unwanted Pods rather than attracting preferred ones
 
 ---
 
