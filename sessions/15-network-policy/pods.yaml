@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netpol-demo
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend
+  namespace: netpol-demo
+  labels:
+    app: backend
+spec:
+  containers:
+  - name: nginx
+    image: nginx:stable-alpine
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: netpol-demo
+  labels:
+    app: client
+spec:
+  containers:
+  - name: busybox
+    image: busybox:1.36
+    command: ['sh', '-c', 'sleep 3600']

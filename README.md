@@ -7,7 +7,10 @@ A set of progressive, hands-on Kubernetes sessions designed for instructor-led d
 - A running Kubernetes cluster (minikube, kind, Docker Desktop, or kubeadm)
 - `kubectl` configured and connected to your cluster
 - Basic familiarity with YAML syntax
-- For **Session 09 (Jenkins)**, `dev` namespace must exist (created in Session 01)
+- For **Session 09 (Jenkins)** and **Session 12 (RBAC)**, `dev` namespace must exist (created in Session 01)
+- For **Session 11 (Gateway API)**, the Gateway API CRDs must be installed (see session README for command)
+- For **Session 15 (Network Policies)**, your CNI plugin must support NetworkPolicy enforcement (Calico, Cilium, or kind default)
+- For **Session 18 (Helm)**, Helm CLI must be installed (`helm version`)
 
 > **Tip for Instructors:** If using **kind** on Apple Silicon (M1/M2/M3), the `mysql:8.0` image included in Sessions 3, 4, and 8 supports ARM64 natively.
 
@@ -26,6 +29,15 @@ A set of progressive, hands-on Kubernetes sessions designed for instructor-led d
 | 07 | **Services** | `pod-service.yaml`, `service.yaml` | Expose pods via NodePort Service |
 | 08 | **StatefulSets** | `statefulset-service.yaml`, `statefulset.yaml` | Workloads with stable network identity |
 | 09 | **Jenkins Demo** | `jenkins.yaml` | Real-world combo: Pod + Service in a namespace |
+| 10 | **Taints and Tolerations** | `no-toleration-pod.yaml`, `toleration-pod.yaml` | Control Pod scheduling with node taints |
+| 11 | **Gateway API** | `backend.yaml`, `gateway.yaml`, `httproute.yaml` | Modern traffic routing with Gateway and HTTPRoute |
+| 12 | **RBAC & Security** | `serviceaccount.yaml`, `role.yaml`, `rolebinding.yaml` | Namespace-scoped access control |
+| 13 | **Health Probes & Init Containers** | `pod-probes.yaml`, `pod-init.yaml` | Liveness, readiness, startup probes and init containers |
+| 14 | **Affinity & Anti-affinity** | `pod-node-affinity.yaml`, `pod-no-affinity.yaml` | Node affinity scheduling rules |
+| 15 | **Network Policies** | `pods.yaml`, `networkpolicy.yaml` | Namespace-scoped ingress traffic control |
+| 16 | **Jobs & CronJobs** | `job.yaml`, `cronjob.yaml` | Batch and scheduled workloads |
+| 17 | **DaemonSets** | `daemonset.yaml` | One pod per node for system services |
+| 18 | **Helm** | `Chart.yaml`, `values.yaml`, `templates/*.yaml` | Package manager and templating for Kubernetes |
 
 ---
 
@@ -58,6 +70,16 @@ kubectl delete -f .
 To clean up everything across all sessions (in reverse order):
 
 ```bash
+# Note: Session 18 uses Helm — use `helm uninstall my-nginx` instead of kubectl delete
+# See Session 18 README for full cleanup
+kubectl delete -f sessions/17-daemonsets/
+kubectl delete -f sessions/16-jobs/
+kubectl delete -f sessions/15-network-policy/
+kubectl delete -f sessions/14-affinity/
+kubectl delete -f sessions/13-probes/
+kubectl delete -f sessions/12-rbac/
+kubectl delete -f sessions/11-gateway-api/
+kubectl delete -f sessions/10-taints-tolerations/
 kubectl delete -f sessions/09-jenkins/
 kubectl delete -f sessions/08-statefulsets/
 kubectl delete -f sessions/07-services/
@@ -78,7 +100,10 @@ Before delivering sessions, run this validation:
 ```bash
 # 1. Verify all directories exist
 for i in 01-namespace 02-pods 03-configmaps 04-secrets 05-storage \
-         06-deployments 07-services 08-statefulsets 09-jenkins; do
+         06-deployments 07-services 08-statefulsets 09-jenkins \
+         10-taints-tolerations 11-gateway-api 12-rbac 13-probes \
+         14-affinity 15-network-policy 16-jobs 17-daemonsets \
+         18-helm; do
   test -d "sessions/$i" && echo "OK: $i" || echo "MISSING: $i"
 done
 
@@ -90,11 +115,14 @@ done
 
 # 3. Count total YAML files
 find sessions -name '*.yaml' | wc -l
-# Expected: 16
+# Expected: 37
 
 # 4. Verify per-session READMEs exist
 for i in 01-namespace 02-pods 03-configmaps 04-secrets 05-storage \
-         06-deployments 07-services 08-statefulsets 09-jenkins; do
+         06-deployments 07-services 08-statefulsets 09-jenkins \
+         10-taints-tolerations 11-gateway-api 12-rbac 13-probes \
+         14-affinity 15-network-policy 16-jobs 17-daemonsets \
+         18-helm; do
   test -f "sessions/$i/README.md" && echo "OK: $i/README.md" || echo "MISSING: $i/README.md"
 done
 ```
